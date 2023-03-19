@@ -1,69 +1,29 @@
-name: deploy-docker-react
-env:
-  EB_PACKAGE_S3_BUCKET_NAME : "elasticbeanstalk-eu-west-3-860300666219"
-  EB_APPLICATION_NAME       : "Docker"
-  EB_ENVIRONMENT_NAME       : "Docker-env"
-  DEPLOY_PACKAGE_NAME       : "docker-react_${{ github.sha }}.zip"
-  AWS_REGION_NAME           : "eu-west-3"
-
+name: Deploy Frontend
 on:
- push:
-  branches:
-   - main
+  push:
+    branches:
+      - main
 
 jobs:
- CI:
-  runs-on: ubuntu-latest
-
-  steps:
-    - name: Git clone our repo
-      uses: actions/checkout@v1
-
-    - name: Create docker container
-      run: docker build -t frontend .
-
-#    - name: Run tests
-#      run: docker run -e CI=true frontend npm run test
-
-    - name: Create ZIP deployment package
-      run : zip -r ${{ env.DEPLOY_PACKAGE_NAME }} ./ -x *.git*
-      
-    - name: Configure my AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id    :  ${{ secrets.AWS_ACCESS_KEY }}
-        aws-secret-access-key:  ${{ secrets.AWS_SECRET_KEY }}
-        aws-region           :  ${{ env.AWS_REGION_NAME }}
-        
-    - name: Copy Deployment package to S3 bucket
-      run : aws s3 cp ${{ env.DEPLOY_PACKAGE_NAME }}  s3://${{ env.EB_PACKAGE_S3_BUCKET_NAME }}/
-    
-    - name: Print Happy Message for CI finish
-      run : echo "CI Pipeline part Finished successfully!"
-
- CD:
+  build:
     runs-on: ubuntu-latest
-    needs: [CI]
-
     steps:
-    - name: Configure my AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id    :  ${{ secrets.AWS_ACCESS_KEY }}
-        aws-secret-access-key:  ${{ secrets.AWS_SECRET_KEY }}
-        aws-region           :  ${{ env.AWS_REGION_NAME }}
-    
-    - name: Create new ElasticBeanstalk Application Version
-      run : |
-        aws elasticbeanstalk create-application-version \
-        --application-name ${{ env.EB_APPLICATION_NAME }} \
-        --source-bundle S3Bucket="${{ env.EB_PACKAGE_S3_BUCKET_NAME }}",S3Key="${{ env.DEPLOY_PACKAGE_NAME }}" \
-        --version-label "Ver-${{ github.sha }}" \
-        --description "CommitSHA-${{ github.sha }}"
-       
-    - name: Deploy new ElasticBeanstalk Application Version
-      run : aws elasticbeanstalk update-environment --environment-name ${{ env.EB_ENVIRONMENT_NAME }} --version-label "Ver-${{ github.sha }}"
-      
-    - name: Print Happy Message for CD finish
-      run : echo "CD Pipeline part Finished successfully!"
+      - uses: actions/checkout@v2
+      - run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+      - run: docker build -t edmitrenko/frontend -f Dockerfile.dev .
+#      - run: docker run -e CI=true edmitrenko/frontend npm test
 
+      - name: Generate deployment package
+        run: zip -r deploy.zip . -x '*.git*'
+
+      - name: Deploy to EB
+        uses: einaregilsson/beanstalk-deploy@v18
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
+          application_name: Docker-gh
+          environment_name: Docker-env
+          existing_bucket_name: elasticbeanstalk-eu-west-3-860300666219
+          region: us-east-1
+          version_label: ${{ github.sha }}
+          deployment_package: deploy.zip
