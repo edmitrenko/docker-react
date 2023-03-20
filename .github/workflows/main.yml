@@ -23,7 +23,7 @@ jobs:
       run: docker build -t edmitrenko/frontend:dev -f Dockerfile.dev .
 
     - name: Run tests
-      run: docker run -e CI=true frontend npm run test
+      run: docker run -e CI=true edmitrenko/frontend:dev npm run test
 
     - name: Create prod docker container
       run: docker build -t edmitrenko/frontend .
