@@ -9,6 +9,15 @@ function App() {
         <p>
           This is production - version 2.0!
         </p>
+       <a
+          className="App-link"
+          href="https://reactjs.org"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Learn React
+        </a>
+
       </header>
     </div>
   );
