@@ -1,3 +1,5 @@
+<img src="https://github.com/edmitrenko/docker-react/workflows/deploy-docker-react/badge.svg?branch=main"><br>
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
