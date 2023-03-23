@@ -1,8 +1,8 @@
 name: deploy-docker-react
 env:
   EB_PACKAGE_S3_BUCKET_NAME : "elasticbeanstalk-eu-west-3-860300666219"
-  EB_APPLICATION_NAME       : "Docker"
-  EB_ENVIRONMENT_NAME       : "Docker-env-1"
+  EB_APPLICATION_NAME       : "multi-docker"
+  EB_ENVIRONMENT_NAME       : "Multidocker-env"
   DEPLOY_PACKAGE_NAME       : "docker-react_${{ github.sha }}.zip"
   AWS_REGION_NAME           : "eu-west-3"
 
@@ -25,17 +25,18 @@ jobs:
     - name: Run tests
       run: docker run -e CI=true edmitrenko/frontend:dev npm run test
 
-    - name: Create prod docker container
-      run: docker build -t edmitrenko/frontend .
+    # - name: Create prod docker container
+    #   run: docker build -t edmitrenko/frontend .
 
-    - name: Login to dockerhub
-      run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+    # - name: Login to dockerhub
+    #   run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Push docker container to dockerhub
-      run: docker push edmitrenko/frontend
+    # - name: Push docker container to dockerhub
+    #   run: docker push edmitrenko/frontend
 
     - name: Create ZIP deployment package
-      run : zip -r ${{ env.DEPLOY_PACKAGE_NAME }} ./Dockerrun.aws.json
+      # run: zip -r ${{ env.DEPLOY_PACKAGE_NAME }} ./Dockerrun.aws.json
+      run : zip -r ${{ env.DEPLOY_PACKAGE_NAME }} ./ -x *.git*
       
     - name: Configure my AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
